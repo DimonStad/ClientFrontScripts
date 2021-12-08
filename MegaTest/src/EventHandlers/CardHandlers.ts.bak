@@ -1,0 +1,69 @@
+import { Numerator } from "@docsvision/webclient/BackOffice/Numerator";
+import { MessageBox } from "@docsvision/webclient/Helpers/MessageBox/MessageBox";
+import { ISaveControlData } from "@docsvision/webclient/Legacy/LegacyModels";
+import { CustomButton } from "@docsvision/webclient/Platform/CustomButton";
+import { DateTimePicker } from "@docsvision/webclient/Platform/DateTimePicker";
+import { TextArea } from "@docsvision/webclient/Platform/TextArea";
+import { TextBox } from "@docsvision/webclient/Platform/TextBox";
+import { NumberControl } from "@docsvision/webclient/Platform/Number";
+import { ICancelableEventArgs } from "@docsvision/webclient/System/ICancelableEventArgs";
+import { Layout } from "@docsvision/webclient/System/Layout";
+import { Employee } from "@docsvision/webclient/BackOffice/Employee";
+import { $TestController } from "../Controllers/TestController";
+
+
+export async function getCardInfo(sender: CustomButton) {
+    let layout = sender.layout;
+    let numberControl = layout.controls.tryGet<Numerator>("Number");
+    let creationDateControl = layout.controls.tryGet<DateTimePicker>("CreationDate");
+    let dateIntoControl = layout.controls.tryGet<DateTimePicker>("DateInto");
+    let dateOnControl = layout.controls.tryGet<DateTimePicker>("DateOn");
+    let reasonControl = layout.controls.tryGet<TextArea>("Reason");
+    if (!numberControl || !creationDateControl || !dateIntoControl || !dateOnControl || !reasonControl) { return; }
+    let message = "Номер заявки: {0}\n Дата создания заявки: {1}\n Дата командировки с: {2}\n По:{3}\n Основание поездки: {4}\n".format(
+        (numberControl.hasValue() ? numberControl.params.value.number : "не сформирован"),
+        creationDateControl.params.value.toLocaleString(),
+        dateIntoControl.params.value.toLocaleDateString(),
+        dateOnControl.params.value.toLocaleDateString(),
+        reasonControl.params.value.toString());
+    MessageBox.ShowInfo(message);
+}
+
+export async function changeData(sender: DateTimePicker) {
+    let layout = sender.layout;
+    let dateIntoControl = layout.controls.tryGet<DateTimePicker>("DateInto");
+    let dateOnControl = layout.controls.tryGet<DateTimePicker>("DateOn");
+
+    let countDayControl = layout.controls.tryGet<NumberControl>("CountDay");
+
+    let tmp = Math.ceil((dateOnControl.params.value.getTime() - dateIntoControl.params.value.getTime()) / 1000 / 60 / 60 / 24);
+    countDayControl.params.value = tmp;
+
+}
+
+export async function saveName(sender: Layout, e: ICancelableEventArgs<ISaveControlData>) {
+    let layout = sender.layout;
+    let nameControl = layout.controls.tryGet<TextBox>("Name");
+
+    if (nameControl.params.value == null) {
+        let message = "Заполните название!";
+        MessageBox.ShowError(message);
+        e.cancel();
+    }
+
+}
+
+export async function changeCommanded(sender: Employee) {
+    let layout = sender.layout;
+    let bossControl = layout.controls.tryGet<Employee>("Boss");
+    let phoneControl = layout.controls.tryGet<TextBox>("Phone");
+
+    if (sender.hasValue()) {
+        let employeeModel = await $TestController.GetEmployeeData(sender.params.value.id)
+        phoneControl.params.value = employeeModel.phone;
+        bossControl.params.value = employeeModel.manager;
+    } else {
+        bossControl.params.value = null;
+        phoneControl.params.value = null;
+    }
+}

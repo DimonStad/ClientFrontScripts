@@ -1,0 +1,129 @@
+define(['tslib', '@docsvision/webclient/Helpers/MessageBox/MessageBox', '@docsvision/webclient/System/RequestManager', '@docsvision/webclient/System/UrlStore', '@docsvision/webclient/System/ExtensionManager'], function (tslib, MessageBox, RequestManager, UrlStore, ExtensionManager) { 'use strict';
+
+  //Some handlers
+  function sampleEventHandler(sender, e) {
+      return tslib.__awaiter(this, void 0, JQueryDeferred, function () {
+          return tslib.__generator(this, function (_a) {
+              return [2 /*return*/];
+          });
+      });
+  }
+
+  var SomeEventHandlers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    sampleEventHandler: sampleEventHandler
+  });
+
+  var TestController = /** @class */ (function () {
+      function TestController() {
+      }
+      /**
+       * ����� ��������� ���������� � ����������
+       * @param employeeId id ����������
+       */
+      TestController.prototype.GetEmployeeData = function (employeeId) {
+          var url = UrlStore.urlStore.urlResolver.resolveUrl("GetEmployeeData", "Test");
+          var data = {
+              employeeId: employeeId
+          };
+          return RequestManager.requestManager.post(url, JSON.stringify(data));
+      };
+      return TestController;
+  }());
+  var $TestController = new TestController();
+
+  function getCardInfo(sender) {
+      return tslib.__awaiter(this, void 0, void 0, function () {
+          var layout, numberControl, creationDateControl, dateIntoControl, dateOnControl, reasonControl, message;
+          return tslib.__generator(this, function (_a) {
+              layout = sender.layout;
+              numberControl = layout.controls.tryGet("Number");
+              creationDateControl = layout.controls.tryGet("CreationDate");
+              dateIntoControl = layout.controls.tryGet("DateInto");
+              dateOnControl = layout.controls.tryGet("DateOn");
+              reasonControl = layout.controls.tryGet("Reason");
+              if (!numberControl || !creationDateControl || !dateIntoControl || !dateOnControl || !reasonControl) {
+                  return [2 /*return*/];
+              }
+              message = "����� ������: {0}\n ���� �������� ������: {1}\n ���� ������������ �: {2}\n ��:{3}\n ��������� �������: {4}\n".format((numberControl.hasValue() ? numberControl.params.value.number : "�� �����������"), creationDateControl.params.value.toLocaleString(), dateIntoControl.params.value.toLocaleDateString(), dateOnControl.params.value.toLocaleDateString(), reasonControl.params.value.toString());
+              MessageBox.MessageBox.ShowInfo(message);
+              return [2 /*return*/];
+          });
+      });
+  }
+  function changeData(sender) {
+      return tslib.__awaiter(this, void 0, void 0, function () {
+          var layout, dateIntoControl, dateOnControl, countDayControl, tmp;
+          return tslib.__generator(this, function (_a) {
+              layout = sender.layout;
+              dateIntoControl = layout.controls.tryGet("DateInto");
+              dateOnControl = layout.controls.tryGet("DateOn");
+              countDayControl = layout.controls.tryGet("CountDay");
+              tmp = Math.ceil((dateOnControl.params.value.getTime() - dateIntoControl.params.value.getTime()) / 1000 / 60 / 60 / 24);
+              countDayControl.params.value = tmp;
+              return [2 /*return*/];
+          });
+      });
+  }
+  function saveName(sender, e) {
+      return tslib.__awaiter(this, void 0, void 0, function () {
+          var layout, nameControl, message;
+          return tslib.__generator(this, function (_a) {
+              layout = sender.layout;
+              nameControl = layout.controls.tryGet("Name");
+              if (nameControl.params.value == null) {
+                  message = "��������� ��������!";
+                  MessageBox.MessageBox.ShowError(message);
+                  e.cancel();
+              }
+              return [2 /*return*/];
+          });
+      });
+  }
+  function changeCommanded(sender) {
+      return tslib.__awaiter(this, void 0, void 0, function () {
+          var layout, bossControl, phoneControl, employeeModel;
+          return tslib.__generator(this, function (_a) {
+              switch (_a.label) {
+                  case 0:
+                      layout = sender.layout;
+                      bossControl = layout.controls.tryGet("Boss");
+                      phoneControl = layout.controls.tryGet("Phone");
+                      if (!sender.hasValue()) return [3 /*break*/, 2];
+                      return [4 /*yield*/, $TestController.GetEmployeeData(sender.params.value.id)];
+                  case 1:
+                      employeeModel = _a.sent();
+                      phoneControl.params.value = employeeModel.phone;
+                      bossControl.params.value = employeeModel.manager;
+                      return [3 /*break*/, 3];
+                  case 2:
+                      bossControl.params.value = null;
+                      phoneControl.params.value = null;
+                      _a.label = 3;
+                  case 3: return [2 /*return*/];
+              }
+          });
+      });
+  }
+
+  var CardHandlers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    getCardInfo: getCardInfo,
+    changeData: changeData,
+    saveName: saveName,
+    changeCommanded: changeCommanded
+  });
+
+  // Главная входная точка всего расширения
+  // Данный файл должен импортировать прямо или косвенно все остальные файлы, 
+  // чтобы rollup смог собрать их все в один бандл.
+  // Регистрация расширения позволяет корректно установить все
+  // обработчики событий, сервисы и прочие сущности web-приложения.
+  ExtensionManager.extensionManager.registerExtension({
+      name: "Template front extension",
+      version: "5.5.15",
+      globalEventHandlers: [SomeEventHandlers, CardHandlers]
+  });
+
+});
+//# sourceMappingURL=extension.js.map
